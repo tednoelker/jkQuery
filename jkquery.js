@@ -33,10 +33,10 @@
             // Test if entire query already exists
             var querySelectorAll = document.querySelectorAll(query);
 
-            if (querySelectorAll) {
+            if (querySelectorAll.length) {
                 element = querySelectorAll;
             } else {
-                element = { 0: jkQuery.build(query) };
+                element = [ jkQuery.build(query, document) ];
             }
 
         }
@@ -96,13 +96,15 @@
      *
      * @private
      * @param string query
+     * @param object node
      * @returns object
      *
      */
 
-    jkQuery.build = function (query) {
+    jkQuery.build = function (query, node) {
 
-        var element = false;
+        var element = false,
+            parent  = node;
 
         // Separate parent/child selectors if present
         var nodes = query.split(' ');
@@ -110,18 +112,21 @@
         // Query each node
         for (var i = 0; i < nodes.length; i++) {
 
-            var elders = query.split(nodes[i])[0],
-                parent = document.querySelector(elders),
-                exists = parent.querySelector(nodes[i]);
+            var exists = parent.querySelector(nodes[i]);
 
             if (exists) {
 
-                element = exists;
+                parent = element = exists;
 
             } else {
 
                 // Default element if not specified
                 element = document.createElement('div');
+
+                // Default parent container if not further specified
+                if (parent === document) {
+                    parent = document.body;
+                }
 
                 // Split id, class and element delimiters
                 var selectors = nodes[i].match(/\#[^.]*|\.[^.#]*|^[^.#]*/g);
@@ -145,6 +150,8 @@
 
                 parent.appendChild(element);
 
+                parent = element;
+
             }
 
         }
@@ -158,11 +165,12 @@
     // Group public methods
     jkQuery.fn = {};
 
+
     /* this.event()
      *
      * Chain method to bind an event listener
      *
-     * @private
+     * @public
      * @param string type
      * @callback
      * @returns object
@@ -191,7 +199,7 @@
      *
      * Chain method to add/remove class
      *
-     * @private
+     * @public
      * @param string toggle
      * @param string classname
      * @returns object
@@ -212,7 +220,7 @@
      *
      * Chain method to calculate property value
      *
-     * @private
+     * @public
      * @param string property
      * @returns number
      *
@@ -232,7 +240,7 @@
      *
      * Chain method to bind an event on click or touchstart, but not both in succession
      *
-     * @private
+     * @public
      * @callback
      * @returns object
      *
@@ -261,6 +269,31 @@
             callback.call(this, e);
             e.preventDefault();
         });
+
+        return this;
+
+    };
+    /***/
+
+
+    /* this.append()
+     *
+     * Chain method to bind an event on click or touchstart, but not both in succession
+     *
+     * @public
+     * @callback
+     * @returns object
+     *
+     */
+
+    jkQuery.fn.append = function (string) {
+
+        if (string.indexOf('<') > -1) {
+            var html = this.innerHTML;
+            this.innerHTML = html + string;
+        } else {
+            jkQuery.build(string, this);
+        }
 
         return this;
 

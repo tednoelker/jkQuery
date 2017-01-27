@@ -24,7 +24,7 @@
             query = 'html';
             element = document.querySelectorAll(query);
 
-        } else if (typeof query.tagName !== 'undefined') {
+        } else if (typeof query === 'object') {
 
             element = query;
 
@@ -60,27 +60,11 @@
 
         } else {
 
-            element.class = function (toggle, classname) {
-                for (var i = 0; i < element.length; i++) {
-                    jkQuery.select(query)[i].class(toggle, classname);
+            for (var fns in jkQuery.fn) {
+                if (jkQuery.fn.hasOwnProperty(fns)) {
+                    jkQuery.each(element, fns);
                 }
-            };
-
-            element.get = function () {
-                return element;
-            };
-
-            element.impress = function (callback) {
-                for (var i = 0; i < element.length; i++) {
-                    jkQuery.select(query)[i].impress(callback);
-                }
-            };
-
-            element.on = function (type, callback) {
-                for (var i = 0; i < element.length; i++) {
-                    jkQuery.select(query)[i].on(type, callback);
-                }
-            };
+            }
 
         }
 
@@ -92,7 +76,7 @@
 
     /* jkQuery.build()
      *
-     * Node builder called from jkQuery.select()
+     * Node builder called from jkQuery.select() or fn.append()
      *
      * @private
      * @param string query
@@ -162,11 +146,37 @@
     /***/
 
 
+    /* jkQuery.each()
+     *
+     * Pass each function and its arguments to the individual elements
+     *
+     * @private
+     * @param array elements
+     * @param string fn
+     * @returns array
+     *
+     */
+
+    jkQuery.each = function (elements, fn) {
+
+        elements[fn] = function (args) {
+            for (var i = 0; i < elements.length; i++) {
+                elements[i][fn].apply(elements[i], arguments);
+            }
+            return elements;
+        };
+
+        return elements;
+
+    };
+    /***/
+
+
     // Group public methods
     jkQuery.fn = {};
 
 
-    /* this.event()
+    /* this.on()
      *
      * Chain method to bind an event listener
      *
@@ -179,14 +189,18 @@
 
     jkQuery.fn.on = function (type, callback) {
 
+        var element = this;
+
+        var bind = function (on) {
+            element.addEventListener(on, function (e) {
+                callback.call(this, e);
+            });
+        };
+
         var event = type.split(' ');
 
         for (var i = 0; i < event.length; i++) {
-
-            this.addEventListener(event[i], function (e) {
-                callback.call(this, e);
-            });
-
+            bind(event[i]);
         }
 
         return this;
@@ -230,7 +244,7 @@
 
         var value = getComputedStyle(this).getPropertyValue(property);
 
-        return parseFloat(value);
+        return value;
 
     };
     /***/

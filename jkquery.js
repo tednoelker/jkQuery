@@ -286,24 +286,25 @@
 
         var trackTouch = {};
 
-        this.addEventListener('touchstart', function (e) {
+        this.on('touchstart', function (e) {
+
             trackTouch.x = e.touches[0].pageX;
             trackTouch.y = e.touches[0].pageY;
-        });
 
-        this.addEventListener('touchend', function (e) {
+        }).on('touchend', function (e) {
+
             var scrollX = Math.abs(trackTouch.x - e.changedTouches[0].pageX),
                 scrollY = Math.abs(trackTouch.y - e.changedTouches[0].pageY);
+
             if ( (scrollX < 10) && (scrollY < 10) ) {
                 callback.call(this, e);
             }
-            e.stopPropagation();
-            e.preventDefault();
-        });
 
-        this.addEventListener('click', function (e) {
-            callback.call(this, e);
-            e.preventDefault();
+        }).on('click', function (e) {
+
+            if (typeof trackTouch.x === 'undefined') {
+                callback.call(this, e);
+            }
         });
 
         return this;

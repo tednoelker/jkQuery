@@ -10,7 +10,7 @@
      *
      * @private
      * @param mixed query
-     * @returns object
+     * @returns element
      *
      */
 
@@ -81,7 +81,7 @@
      * @private
      * @param string query
      * @param object node
-     * @returns object
+     * @returns element
      *
      */
 
@@ -176,6 +176,28 @@
     jkQuery.fn = {};
 
 
+    /* this.each()
+     *
+     * Call user function on each selected element
+     *
+     * @public
+     * @callback
+     * @returns element
+     *
+     */
+
+    jkQuery.fn.each = function (callback) {
+
+        if (typeof callback === 'function') {
+            callback(this);
+        }
+
+        return this;
+
+    };
+    /***/
+
+
     /* this.on()
      *
      * Chain method to bind an event listener
@@ -183,7 +205,7 @@
      * @public
      * @param string type
      * @callback
-     * @returns object
+     * @returns element
      *
      */
 
@@ -216,7 +238,7 @@
      * @public
      * @param string toggle
      * @param string classname
-     * @returns object
+     * @returns element
      *
      */
 
@@ -256,7 +278,7 @@
      *
      * @public
      * @callback
-     * @returns object
+     * @returns element
      *
      */
 
@@ -295,8 +317,8 @@
      * Chain method to bind an event on click or touchstart, but not both in succession
      *
      * @public
-     * @callback
-     * @returns object
+     * @param string string
+     * @returns element
      *
      */
 

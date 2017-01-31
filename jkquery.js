@@ -8,7 +8,7 @@
      * jQuery-esque utlity function
      *
      * @public
-     * @version 1.0.1
+     * @version 1.1.0
      * @param {mixed} query
      * @returns {object} new jkQuery element
      *
@@ -277,26 +277,6 @@
     /***/
 
 
-    /* this.css()
-     *
-     * Chain method to calculate property value
-     *
-     * @public
-     * @param {string} property
-     * @returns {mixed}
-     *
-     */
-
-    jkQuery.fn.css = function (property) {
-
-        var value = getComputedStyle(this[0]).getPropertyValue(property);
-
-        return value;
-
-    };
-    /***/
-
-
     /* this.each()
      *
      * Call user function on each selected element
@@ -321,6 +301,33 @@
         });
 
         return this;
+
+    };
+    /***/
+
+
+    /* this.get()
+     *
+     * Retrieve computed style of one element. Returns px values as numbers
+     *
+     * @public
+     * @param {string} property
+     * @returns {mixed}
+     *
+     */
+
+    jkQuery.fn.get = function (property) {
+
+        // Return the value of the first element only
+        var value = getComputedStyle(this[0]).getPropertyValue(property);
+
+        // If result is in pixels, return only the number
+        var stripPx = value.replace('px', '');
+        if ( !isNaN(stripPx) ) {
+            return parseFloat(stripPx);
+        }
+
+        return value;
 
     };
     /***/

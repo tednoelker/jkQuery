@@ -1,72 +1,48 @@
 (function () {
+
     'use strict';
 
-    var jkQuery = {};
 
-    /* jkQuery().select()
+    /* jkQuery()
      *
-     * Lightweight, psuedo-jQuery utlity selector. Accepts query string or object
-     * and builds elements from query string if not already existant.
+     * jQuery-esque utlity function
      *
-     * @private
-     * @param mixed query
-     * @returns element
+     * @public
+     * @version 1.0.0
+     * @param {mixed} query
+     * @returns {object} new jkQuery element
      *
      */
 
-    jkQuery.select = function (query) {
+    var jkQuery = function (query) {
+        return new jkQuery.select(query);
+    };
+    /***/
 
-        var element = false;
 
-        // Test if an object was supplied rather than a string
-        if (query === document || query === window) {
 
-            query = 'html';
-            element = document.querySelectorAll(query);
 
-        } else if (typeof query === 'object') {
+    /* _bindEvent()
+     *
+     * Attach event to element
+     *
+     * @private
+     * @param {string} on
+     * @param {object} element
+     * @callback {jkQuery~_bindEventCallback}
+     * @returns {object} element
+     *
+     * @callback jkQuery~_bindEventCallback
+     * @this {object} element
+     * @param {object} eventData
+     *
+     */
 
-            element = query;
+    var _bindEvent = function (on, element, callback) {
 
-        } else if (typeof query === 'string') {
-
-            // Test if entire query already exists
-            var querySelectorAll = document.querySelectorAll(query);
-
-            if (querySelectorAll.length) {
-                element = querySelectorAll;
-            } else {
-                element = [ jkQuery.build(query, document) ];
-            }
-
-        }
-
-        // Chain event methods
-        for (var i = 0; i < element.length; i++) {
-
-            for (var fn in jkQuery.fn) {
-                if (jkQuery.fn.hasOwnProperty(fn)) {
-                    element[i][fn] = jkQuery.fn[fn];
-                }
-            }
-
-        }
-
-        //
-        if (element.length == 1) {
-
-            element = element[0];
-            element.length = 1;
-
-        } else {
-
-            for (var fns in jkQuery.fn) {
-                if (jkQuery.fn.hasOwnProperty(fns)) {
-                    jkQuery.each(element, fns);
-                }
-            }
-
-        }
+        element.addEventListener(on, function (e) {
+            callback.call(this, e);
+        });
 
         return element;
 
@@ -74,32 +50,32 @@
     /***/
 
 
-    /* jkQuery.build()
+    /* _buildElement()
      *
-     * Node builder called from jkQuery.select() or fn.append()
+     * Query string node builder
      *
      * @private
      * @param string query
-     * @param object node
-     * @returns element
+     * @param object parent
+     * @returns {object} element
      *
      */
 
-    jkQuery.build = function (query, node) {
+    var _buildElement = function (query, parent) {
 
-        var element = false,
-            parent  = node;
+        var element = false;
 
         // Separate parent/child selectors if present
         var nodes = query.split(' ');
 
         // Query each node
-        for (var i = 0; i < nodes.length; i++) {
+        jkQuery.for(nodes, function (i) {
 
             var exists = parent.querySelector(nodes[i]);
 
             if (exists) {
 
+                // Update the parent node for subsequent element queries
                 parent = element = exists;
 
             } else {
@@ -107,38 +83,33 @@
                 // Default element if not specified
                 element = document.createElement('div');
 
-                // Default parent container if not further specified
-                if (parent === document) {
-                    parent = document.body;
-                }
-
                 // Split id, class and element delimiters
                 var selectors = nodes[i].match(/\#[^.]*|\.[^.#]*|^[^.#]*/g);
 
-                // Append attributes by type
-                for (var a = 0; a < selectors.length; a++) {
+                // Create attributes by type
+                jkQuery.for(selectors, function () {
 
-                    var attr = selectors[a];
-
-                    if (attr.indexOf('#') > -1) {
-                        element.setAttribute('id', attr.split('#')[1]);
-                    } else if (attr.indexOf('.') > -1) {
-                        element.classList.add(attr.split('.')[1]);
-                    } else if (attr == 'svg' || attr == 'circle' || attr == 'ellipse' || attr == 'line' || attr == 'path' || attr == 'polyline' || attr == 'polygon' || attr == 'rect') {
-                        element = document.createElementNS('http://www.w3.org/2000/svg', attr);
+                    if (this.indexOf('#') > -1) {
+                        element.setAttribute('id', this.split('#')[1]);
+                    } else if (this.indexOf('.') > -1) {
+                        element.classList.add(this.split('.')[1]);
+                    } else if (this == 'svg' || this == 'circle' || this == 'ellipse' || this == 'line' || this == 'path' || this == 'polyline' || this == 'polygon' || this == 'rect') {
+                        element = document.createElementNS('http://www.w3.org/2000/svg', this);
                     } else {
-                        element = document.createElement(attr);
+                        element = document.createElement(this);
                     }
 
-                }
+                });
 
+                // Append inside parent
                 parent.appendChild(element);
 
+                // Update the parent node for subsequent element queries
                 parent = element;
 
             }
 
-        }
+        });
 
         return element;
 
@@ -146,50 +117,28 @@
     /***/
 
 
-    /* jkQuery.each()
+
+
+    /* jkQuery.for()
      *
-     * Pass each function and its arguments to the individual elements
-     *
-     * @private
-     * @param array elements
-     * @param string fn
-     * @returns array
-     *
-     */
-
-    jkQuery.each = function (elements, fn) {
-
-        elements[fn] = function (args) {
-            for (var i = 0; i < elements.length; i++) {
-                elements[i][fn].apply(elements[i], arguments);
-            }
-            return elements;
-        };
-
-        return elements;
-
-    };
-    /***/
-
-
-    // Group public methods
-    jkQuery.fn = {};
-
-
-    /* this.each()
-     *
-     * Call user function on each selected element
+     * Loop through an array (or object with defined length)
      *
      * @public
-     * @callback
-     * @returns element
+     * @param {array|object} obj
+     * @callback {jkQuery~forCallback}
+     * @returns {object} jkQuery
+     *
+     * @callback jkQuery~forCallback
+     * @this {mixed} key-value
+     * @param {number} index
+     * @param {number} key-value
      *
      */
 
-    jkQuery.fn.each = function (callback) {
+    jkQuery.for = function (obj, callback) {
 
-        if (typeof callback === 'function') {
-            callback(this);
+        for (var i = 0; i < obj.length; i++) {
+            callback.call(obj[i], i, obj[i]);
         }
 
         return this;
@@ -198,32 +147,101 @@
     /***/
 
 
-    /* this.on()
+    /* jkQuery.forIn()
      *
-     * Chain method to bind an event listener
+     * Loop through an object
      *
      * @public
-     * @param string type
-     * @callback
-     * @returns element
+     * @param {object} obj
+     * @callback {jkQuery~forInCallback}
+     * @returns {object} jkQuery
+     *
+     * @callback jkQuery~forInCallback
+     * @this {mixed} key-value
+     * @param {number} key-value
      *
      */
 
-    jkQuery.fn.on = function (type, callback) {
+    jkQuery.forIn = function (obj, callback) {
 
-        var element = this;
-
-        var bind = function (on) {
-            element.addEventListener(on, function (e) {
-                callback.call(this, e);
-            });
-        };
-
-        var event = type.split(' ');
-
-        for (var i = 0; i < event.length; i++) {
-            bind(event[i]);
+        for (var val in obj) {
+            if ( obj.hasOwnProperty(val) ) {
+                callback.call(val, val);
+            }
         }
+
+        return this;
+
+    };
+    /***/
+
+
+    /* jkQuery.select()
+     *
+     * Element selection / constructor function
+     *
+     * @public
+     * @param {mixed} query
+     * @returns {object} jkQuery element
+     *
+     */
+
+    jkQuery.select = function (query) {
+
+        // Test if an object was supplied rather than a string
+        if (typeof query.tagName !== 'undefined') {
+
+            this[0] = query;
+            this.length = 1;
+
+        } else if (typeof query === 'string') {
+
+            var elements = document.querySelectorAll(query);
+
+            this.length = elements.length;
+
+            var self = this;
+
+            jkQuery.for(elements, function (i) {
+                self[i] = this;
+            });
+
+        }
+
+        return this;
+
+    };
+    /***/
+
+
+
+
+    // Shorthand to bind event methods to element selector
+    jkQuery.fn = jkQuery.select.prototype;
+
+
+    /* this.append()
+     *
+     * Chain method to bind an event on click or touchstart, but not both in succession
+     *
+     * @public
+     * @param {string} string
+     * @returns {object} jkQuery element
+     *
+     */
+
+    jkQuery.fn.append = function (string) {
+
+        jkQuery.for(this, function () {
+
+            if (string.indexOf('<') > -1) {
+                var html = this.innerHTML;
+                this.innerHTML = html + string;
+            } else {
+                _buildElement(string, this);
+            }
+
+        });
 
         return this;
 
@@ -236,15 +254,17 @@
      * Chain method to add/remove class
      *
      * @public
-     * @param string toggle
-     * @param string classname
-     * @returns element
+     * @param {string} toggle
+     * @param {string} classname
+     * @returns {object} jkQuery element
      *
      */
 
     jkQuery.fn.class = function (toggle, classname) {
 
-        this.classList[toggle](classname);
+        jkQuery.for(this, function () {
+            this.classList[toggle](classname);
+        });
 
         return this;
 
@@ -252,19 +272,19 @@
     /***/
 
 
-    /* this.get()
+    /* this.css()
      *
      * Chain method to calculate property value
      *
      * @public
-     * @param string property
-     * @returns number
+     * @param {string} property
+     * @returns {mixed}
      *
      */
 
-    jkQuery.fn.get = function (property) {
+    jkQuery.fn.css = function (property) {
 
-        var value = getComputedStyle(this).getPropertyValue(property);
+        var value = getComputedStyle(this[0]).getPropertyValue(property);
 
         return value;
 
@@ -272,38 +292,26 @@
     /***/
 
 
-    /* this.impress()
+    /* this.each()
      *
-     * Chain method to bind an event on click or touchstart, but not both in succession
+     * Call user function on each selected element
      *
      * @public
-     * @callback
-     * @returns element
+     * @callback {jkQuery~fnEachCallback}
+     * @returns {object} jkQuery element
+     *
+     * @callback jkQuery~fnEachCallback
+     * @this {object} element
+     * @param {object} jkQuery element
+     * @param {number} index
      *
      */
 
-    jkQuery.fn.impress = function (callback) {
+    jkQuery.fn.each = function (callback) {
 
-        var trackTouch = {};
-
-        this.on('touchstart', function (e) {
-
-            trackTouch.x = e.touches[0].pageX;
-            trackTouch.y = e.touches[0].pageY;
-
-        }).on('touchend', function (e) {
-
-            var scrollX = Math.abs(trackTouch.x - e.changedTouches[0].pageX),
-                scrollY = Math.abs(trackTouch.y - e.changedTouches[0].pageY);
-
-            if ( (scrollX < 10) && (scrollY < 10) ) {
-                callback.call(this, e);
-            }
-
-        }).on('click', function (e) {
-
-            if (typeof trackTouch.x === 'undefined') {
-                callback.call(this, e);
+        jkQuery.for(this, function (index) {
+            if (typeof callback === 'function') {
+                callback.call(this, jkQuery(this), index);
             }
         });
 
@@ -313,24 +321,30 @@
     /***/
 
 
-    /* this.append()
+    /* this.on()
      *
-     * Chain method to bind an event on click or touchstart, but not both in succession
+     * Chain method to bind an event listener
      *
      * @public
-     * @param string string
-     * @returns element
+     * @param {string} eventName
+     * @callback {jkQuery~_bindEventCallback}
+     * @returns {object} jkQuery element
      *
      */
 
-    jkQuery.fn.append = function (string) {
+    jkQuery.fn.on = function (eventList, callback) {
 
-        if (string.indexOf('<') > -1) {
-            var html = this.innerHTML;
-            this.innerHTML = html + string;
-        } else {
-            jkQuery.build(string, this);
-        }
+        var events = eventList.split(' ');
+
+        jkQuery.for(this, function () {
+
+            var element = this;
+
+            jkQuery.for(events, function () {
+                _bindEvent(this, element, callback);
+            });
+
+        });
 
         return this;
 
@@ -338,7 +352,53 @@
     /***/
 
 
-    // Expose constructor function
-    window.jkQuery = jkQuery.select;
+    /* this.press()
+     *
+     * Chain method to bind an event on click or touchstart, but not both in succession
+     *
+     * @public
+     * @callback {jkQuery~_bindEventCallback}
+     * @returns {object} jkQuery element
+     *
+     */
+
+    jkQuery.fn.press = function (callback) {
+
+        jkQuery.for(this, function () {
+
+            var touch = {};
+
+            _bindEvent('touchstart', this, function (e) {
+                touch.x = e.touches[0].pageX;
+                touch.y = e.touches[0].pageY;
+            });
+
+            _bindEvent('touchend', this, function (e) {
+                var scrollX = Math.abs(touch.x - e.changedTouches[0].pageX),
+                    scrollY = Math.abs(touch.y - e.changedTouches[0].pageY);
+
+                if ( (scrollX < 10) && (scrollY < 10) ) {
+                    callback.call(this, e);
+                }
+            });
+
+            _bindEvent('click', this, function (e) {
+                if (typeof touch.x === 'undefined') {
+                    callback.call(this, e);
+                }
+            });
+
+        });
+
+        return this;
+
+    };
+    /***/
+
+
+
+
+    // Expose public helper functions and selection methods
+    window.jkQuery = jkQuery;
 
 })();

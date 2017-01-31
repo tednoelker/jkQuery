@@ -8,7 +8,7 @@
      * jQuery-esque utlity function
      *
      * @public
-     * @version 1.1.1
+     * @version 1.2.0
      * @param {mixed} query
      * @returns {object} new jkQuery element
      *
@@ -57,11 +57,16 @@
      * @private
      * @param {string} query
      * @param {object} parent
+     * @param {object|callback} callback
      * @returns {object} element
+     *
+     * @callback jkQuery~_buildElementCallback
+     * @this {object} element
+     * @param {object} jkQuery element
      *
      */
 
-    var _buildElement = function (query, parent) {
+    var _buildElement = function (query, parent, callback) {
 
         var element = false;
 
@@ -110,6 +115,19 @@
             }
 
         });
+
+        // Assign attributes or callback function to last element
+        if (typeof callback === 'function') {
+
+            callback.call(element, jkQuery(element));
+
+        } else if (typeof callback === 'object') {
+
+            jkQuery.forIn(callback, function (attr, value) {
+                element.setAttribute(attr, value);
+            });
+
+        }
 
         return element;
 
@@ -231,20 +249,21 @@
      * Chain method to bind an event on click or touchstart, but not both in succession
      *
      * @public
-     * @param {string} string
+     * @param {string} query
+     * @param {object|callback} params
      * @returns {object} jkQuery element
      *
      */
 
-    jkQuery.fn.append = function (string) {
+    jkQuery.fn.append = function (query, params) {
 
         jkQuery.for(this, function () {
 
-            if (string.indexOf('<') > -1) {
+            if (query.indexOf('<') === 0 && query.indexOf('>') === query.length - 1) {
                 var html = this.innerHTML;
-                this.innerHTML = html + string;
+                this.innerHTML = html + query;
             } else {
-                _buildElement(string, this);
+                _buildElement(query, this, params);
             }
 
         });

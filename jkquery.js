@@ -8,7 +8,7 @@
      * jQuery-esque utlity function
      *
      * @public
-     * @version 1.0.0
+     * @version 1.0.1
      * @param {mixed} query
      * @returns {object} new jkQuery element
      *
@@ -189,7 +189,12 @@
     jkQuery.select = function (query) {
 
         // Test if an object was supplied rather than a string
-        if (typeof query.tagName !== 'undefined') {
+        if (query === document || query === window) {
+
+            this[0] = document.querySelector('html');
+            this.length = 1;
+
+        } else if (typeof query.tagName !== 'undefined') {
 
             this[0] = query;
             this.length = 1;

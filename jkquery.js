@@ -8,7 +8,7 @@
      * jQuery-esque utlity function
      *
      * @public
-     * @version 1.1.0
+     * @version 1.1.1
      * @param {mixed} query
      * @returns {object} new jkQuery element
      *
@@ -55,8 +55,8 @@
      * Query string node builder
      *
      * @private
-     * @param string query
-     * @param object parent
+     * @param {string} query
+     * @param {object} parent
      * @returns {object} element
      *
      */
@@ -158,15 +158,16 @@
      *
      * @callback jkQuery~forInCallback
      * @this {mixed} key-value
+     * @param {number} key
      * @param {number} key-value
      *
      */
 
     jkQuery.forIn = function (obj, callback) {
 
-        for (var val in obj) {
-            if ( obj.hasOwnProperty(val) ) {
-                callback.call(val, val);
+        for (var key in obj) {
+            if ( obj.hasOwnProperty(key) ) {
+                callback.call(obj[key], key, obj[key]);
             }
         }
 
@@ -269,6 +270,58 @@
 
         jkQuery.for(this, function () {
             this.classList[toggle](classname);
+        });
+
+        return this;
+
+    };
+    /***/
+
+
+    /* this.css()
+     *
+     * Set style values of multiple properties. Convert numeric values into
+     * pixels unless the property appears in the whitelist
+     *
+     * @public
+     * @param {object} styles
+     * @returns {object} jkQuery element
+     *
+     */
+
+    jkQuery.fn.css = function (styles) {
+
+        // True numeric properties
+        var whitelist = [
+            'animationIterationCount',
+            'columnCount',
+            'fillOpacity',
+            'flexGrow',
+            'flexShrink',
+            'fontWeight',
+            'lineHeight',
+            'opacity',
+            'order',
+            'orphans',
+            'widows',
+            'zIndex',
+            'zoom'
+        ];
+
+        jkQuery.for(this, function () {
+
+            var element = this;
+
+            jkQuery.forIn(styles, function (property, value) {
+
+                if (!isNaN(value) && whitelist.indexOf(property) < 0) {
+                    value += 'px';
+                }
+
+                element.style[property] = value;
+
+            });
+
         });
 
         return this;

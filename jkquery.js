@@ -8,7 +8,7 @@
      * jQuery-esque utlity function
      *
      * @public
-     * @version 1.2.0
+     * @version 1.2.1
      * @param {mixed} query
      * @returns {object} new jkQuery element
      *
@@ -246,7 +246,8 @@
 
     /* this.append()
      *
-     * Chain method to bind an event on click or touchstart, but not both in succession
+     * Inject strings containing `<` and `>` into the DOM literally. Otherwise,
+     * attempt to build a node from the string as a query selector.
      *
      * @public
      * @param {string} query
@@ -259,7 +260,7 @@
 
         jkQuery.for(this, function () {
 
-            if (query.indexOf('<') === 0 && query.indexOf('>') === query.length - 1) {
+            if (query.indexOf('<') === 0 && query.indexOf('>') > 1) {
                 var html = this.innerHTML;
                 this.innerHTML = html + query;
             } else {

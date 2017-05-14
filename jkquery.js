@@ -8,7 +8,7 @@
      * jQuery-esque utlity function
      *
      * @public
-     * @version 1.3.1
+     * @version 1.4.0
      * @param {mixed} query
      * @returns {object} new jkQuery element
      *
@@ -524,6 +524,35 @@
                     callback.call(this, e);
                 }
             });
+
+        });
+
+        return this;
+
+    };
+    /***/
+
+
+    /* this.remove()
+     *
+     * Remove an attribute from element, or remove the element itself if no
+     * attribute string is provided.
+     *
+     * @public
+     * @param {string} [attribute]
+     * @returns {object} jkQuery element
+     *
+     */
+
+    jkQuery.fn.remove = function (attribute) {
+
+        jkQuery.for(this, function () {
+
+            if (typeof attribute === 'string') {
+                this.removeAttribute(attribute);
+            } else {
+                this.parentNode.removeChild(this);
+            }
 
         });
 

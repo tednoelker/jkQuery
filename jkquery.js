@@ -8,7 +8,7 @@
      * jQuery-esque utlity function
      *
      * @public
-     * @version 1.2.2
+     * @version 1.3.0
      * @param {mixed} query
      * @returns {object} new jkQuery element
      *
@@ -117,12 +117,9 @@
 
         });
 
-
         // Append additional attributes
         if (typeof attributes === 'object') {
-            jkQuery.forIn(attributes, function (attr, value) {
-                element.setAttribute(attr, value);
-            });
+            jkQuery(element).attr(attributes);
         } else if (typeof attributes === 'function') {
             callback = attributes;
         }
@@ -279,9 +276,55 @@
     /***/
 
 
+    /* this.attr()
+     *
+     * Set element's attributes from string or object arg
+     *
+     * @public
+     * @param {object|string} set
+     * @param {string} [value]
+     * @returns {object} jkQuery element
+     *
+     */
+
+    jkQuery.fn.attr = function (set, value) {
+
+        // Convert second arg to string (even if that value is `false`)
+        if (value || typeof value === 'boolean') {
+            value += '';
+        }
+
+        // Get each element
+        jkQuery.for(this, function () {
+
+            var element = this;
+
+            // If a string was provided, convert it to object syntax
+            if (typeof set === 'string') {
+                var key = set;
+                set = {};
+                set[key] = value || '';
+            }
+
+            // Apply each attribute
+            jkQuery.forIn(set, function (attr, value) {
+                if (value === null) {
+                    value = '';
+                }
+                element.setAttribute(attr, value);
+            });
+
+        });
+
+        return this;
+
+    };
+    /***/
+
+
     /* this.class()
      *
-     * Chain method to add/remove class
+     * Chain method to add/remove from class list
      *
      * @public
      * @param {string} toggle

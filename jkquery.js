@@ -8,7 +8,7 @@
      * jQuery-esque utlity function
      *
      * @public
-     * @version 1.2.1
+     * @version 1.2.2
      * @param {mixed} query
      * @returns {object} new jkQuery element
      *
@@ -57,7 +57,8 @@
      * @private
      * @param {string} query
      * @param {object} parent
-     * @param {object|callback} callback
+     * @param {object} attributes
+     * @callback {jkQuery~_buildElementCallback}
      * @returns {object} element
      *
      * @callback jkQuery~_buildElementCallback
@@ -66,7 +67,7 @@
      *
      */
 
-    var _buildElement = function (query, parent, callback) {
+    var _buildElement = function (query, parent, attributes, callback) {
 
         var element = false;
 
@@ -116,17 +117,19 @@
 
         });
 
-        // Assign attributes or callback function to last element
-        if (typeof callback === 'function') {
 
-            callback.call(element, jkQuery(element));
-
-        } else if (typeof callback === 'object') {
-
-            jkQuery.forIn(callback, function (attr, value) {
+        // Append additional attributes
+        if (typeof attributes === 'object') {
+            jkQuery.forIn(attributes, function (attr, value) {
                 element.setAttribute(attr, value);
             });
+        } else if (typeof attributes === 'function') {
+            callback = attributes;
+        }
 
+        // Provide a function hook to directly manipulate the appened element
+        if (typeof callback === 'function') {
+            callback.call(element, jkQuery(element));
         }
 
         return element;
@@ -251,12 +254,13 @@
      *
      * @public
      * @param {string} query
-     * @param {object|callback} params
+     * @param {object} attributes
+     * @callback {jkQuery~_buildElementCallback}
      * @returns {object} jkQuery element
      *
      */
 
-    jkQuery.fn.append = function (query, params) {
+    jkQuery.fn.append = function (query, attributes, callback) {
 
         jkQuery.for(this, function () {
 
@@ -264,7 +268,7 @@
                 var html = this.innerHTML;
                 this.innerHTML = html + query;
             } else {
-                _buildElement(query, this, params);
+                _buildElement(query, this, attributes, callback);
             }
 
         });

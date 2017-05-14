@@ -1,4 +1,4 @@
-(function () {
+(function (jkQuery, XMLHttpRequest) {
 
     'use strict';
 
@@ -58,31 +58,31 @@
     AJAX.prototype.request = function (file, successCallback, errorCallback) {
 
         // Create new XMLHttpRequest
-        var httpRequest = new window.XMLHttpRequest();
+        var httpRequest = new XMLHttpRequest();
 
         // Throw error and die if XMLHttpRequest or file path is not available
-        if (!httpRequest || !file) {
-            errorCallback(httpRequest);
+        if (!httpRequest || !file || !successCallback) {
+            errorCallback.call(httpRequest, httpRequest);
             return false;
         }
 
         // Attach error callback to httpRequest's native error handler
         httpRequest.onerror = function () {
-            return errorCallback(httpRequest);
+            return errorCallback.call(httpRequest, httpRequest);
         };
 
         // Listen for success state and deliever the success callback
         httpRequest.onreadystatechange = function () {
-            if (httpRequest.readyState === window.XMLHttpRequest.DONE) {
+            if (httpRequest.readyState === XMLHttpRequest.DONE) {
                 if (httpRequest.status === 200) {
                     var response = httpRequest.responseText;
                     if (httpRequest.getResponseHeader('content-type').indexOf('json') > -1) {
                         response = JSON.parse(httpRequest.responseText);
                     }
-                    return successCallback(response);
+                    return successCallback.call(httpRequest, response);
                 }
                 // Throw error if file did not return a 200 status
-                return errorCallback(httpRequest);
+                return errorCallback.call(httpRequest, httpRequest);
             }
         };
 
@@ -136,4 +136,5 @@
     };
     /***/
 
-})();
+
+})(window.jkQuery, window.XMLHttpRequest);
